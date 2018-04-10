@@ -61,7 +61,7 @@ jobs:
                     sfdx force:data:soql:query \
                                     -q "select Name from apexclass where name like '%Test' order by name" \
                                     -u feature1 --json > ~/tools/ApexTests.json
-                    cat ApexTests.json | jq -r '.result.records | .[0:length/2] |.[] .Name'
+                    cat  ~/tools/ApexTests.json | jq -r '.result.records | .[0:length/2] |.[] .Name'
                     testsToRun=$(cat ~/tools/ApexTests.json | jq -r '.result.records[0:length/2] | .[] .Name+","' --join-output)
                     sfdx force:apex:test:run -u feature1 -w 10 -c -r human -d ~/test-results -n $testsToRun
             - run: 
