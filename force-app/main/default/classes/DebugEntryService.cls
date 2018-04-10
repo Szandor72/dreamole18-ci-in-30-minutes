@@ -30,6 +30,7 @@ public with sharing class DebugEntryService {
 		insert newDebugEntries;
 	}
 
+  @testvisible
 	private static Boolean isValid(List<String> traceInfo) {
 		return traceInfo != null && traceInfo.size()==6;
 	}
