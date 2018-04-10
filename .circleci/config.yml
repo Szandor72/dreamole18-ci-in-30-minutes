@@ -134,6 +134,7 @@ jobs:
             - run:
                 name: remove user permissions from admin profile (if present)
                 command: |
+                  ls ~/tools/src/profiles
                   test -f ~/tools/src/profiles/Admin.profile && sed -i '/<userPermissions>/,/<\/userPermissions>/d' || echo no profile found
             - persist_to_workspace:
                 root: ~/
