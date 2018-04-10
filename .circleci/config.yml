@@ -45,7 +45,7 @@ jobs:
                 name: DX Install
                 command: ~/tools/sfdx/install
             - run: 
-                name: Create 2nd feature Org and push source
+                name: Create 1st feature Org and push source
                 command: |
                     sfdx force:org:create --definitionfile ./config/project-scratch-def.json \
                             --setalias feature1 \
@@ -58,11 +58,8 @@ jobs:
             - run:
                 name: Query Tests And Run 1st half of Tests
                 command: |
-                    sfdx force:data:soql:query -q "select Name from apexclass where name like '%Test' order by name" -u feature1
-                    sfdx force:data:soql:query -q "select Name from apexclass where name like '%Test' order by name" -u feature1 --json >> ~/tools/ApexTests.json
-                    echo Will run following tests - 
-                    cat ~/tools/ApexTests.json | jq -r '.result.records[0:length/2] | .[] .Name+","' --join-output 
-                    testsToRun=$(cat ~/tools/ApexTests.json | jq -r '.result.records[0:length/2] | .[] .Name+","' --join-output)
+                    sfdx force:data:soql:query -q "select Name from apexclass where name like '%Test' order by name" -u feature1 
+                    testsToRun=$(cat ~/tools/ApexTests.json | jq -r '.result.records[0:2] | .[] .Name+","' --join-output)
                     sfdx force:apex:test:run -u feature1 -w 10 -c -r human -d ~/test-results -n $testsToRun
             - run: 
                 name: Delete Scratch
@@ -103,9 +100,7 @@ jobs:
                 name: Query Tests And Run 2nd half of Tests
                 command: |
                     sfdx force:data:soql:query -q "select Name from apexclass where name like '%Test' order by name" -u feature2 --json >> ~/tools/ApexTests.json
-                    echo Will run following tests -
-                    cat ~/tools/ApexTests.json | jq -r '.result.records[length/2:length] | .[] .Name+","' --join-output
-                    testsToRun=$(cat ~/tools/ApexTests.json | jq -r '.result.records[length/2:length] | .[] .Name+","' --join-output)
+                    testsToRun=$(cat ~/tools/ApexTests.json | jq -r '.result.records[2:4] | .[] .Name+","' --join-output)
                     sfdx force:apex:test:run -u feature2 -w 10 -c -r human -d ~/test-results -n $testsToRun
             - run: 
                 name: Delete Scratch
