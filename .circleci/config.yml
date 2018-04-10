@@ -1,0 +1,218 @@
+version: 2
+jobs:
+    setup-dx-environment:
+        machine: true 
+        steps:
+        - run:
+            name: Download DX and store 
+            command: |
+                mkdir ~/tools
+                wget -qO- https://developer.salesforce.com/media/salesforce-cli/sfdx-cli/channels/stable/sfdx-cli-linux-x64.tar.xz | tar xJf - --directory ~/tools/
+                mv ~/tools/sfdx-cli-v6.8.2-f5dd340adc-linux-x64 ~/tools/sfdx
+                ~/tools/sfdx/install
+        - run:
+            name: create tmp dir and server key; check server key
+            command: |
+                mkdir ~/tools/sfdx-keys 
+                echo $SSL_SERVER_KEY_HEX | xxd -r -ps >> ~/tools/sfdx-keys/server.key;
+                openssl rsa -in ~/tools/sfdx-keys/server.key -check -noout
+        - run:
+            name: check auth for dev hub
+            command: |
+                sfdx force:auth:jwt:grant --clientid $DX_CONSUMER_KEY --jwtkeyfile ~/tools/sfdx-keys/server.key --username $DX_USER --setdefaultdevhubusername --setalias hub
+        - run: 
+            name: check auth for production
+            command: |
+                echo $DX_AUTHURL_PRODUCTION >> ~/tools/production.auth
+                sfdx force:auth:sfdxurl:store -f ~/tools/production.auth -a production
+        - persist_to_workspace:
+            root: ~/
+            paths:
+                - tools/*
+                - .sfdx/*
+        - store_artifacts:
+            path: ~/.sfdx/sfdx.log
+            destination: sfdx-logs
+
+
+    feature-RunTestsDistributed_1:
+        machine: true 
+        steps: 
+            - checkout
+            - attach_workspace:
+                at: ~/
+            - run: 
+                name: DX Install
+                command: ~/tools/sfdx/install
+            - run: 
+                name: Create 2nd feature Org and push source
+                command: |
+                    sfdx force:org:create --definitionfile ./config/project-scratch-def.json \
+                            --setalias feature1 \
+                            --durationdays 1
+                    sfdx force:source:push -u feature1
+            - run: 
+                name: generate password so we can login if something fails
+                command: |
+                    sfdx force:user:password:generate -u feature1
+            - run:
+                name: Query Tests And Run 1st half of Tests
+                command: |
+                    sfdx force:data:soql:query -q "select Name from apexclass where name like '%Test'" -u feature1 --json >> ~/tools/ApexTests.json
+                    testsToRun=$(cat ~/tools/ApexTests.json | jq -r '.result.records[0:length/2] | .[] .Name+","' --join-output)
+                    sfdx force:apex:test:run -u feature1 -w 10 -c -r human -d ~/test-results -n $testsToRun
+            - run: 
+                name: Delete Scratch
+                when: always 
+                command: |
+                    sfdx force:org:delete -u feature1 --noprompt
+            - store_test_results:
+                path: ~/test-results
+            - store_artifacts:
+                path: ~/test-results
+                destination: test-results
+            - store_artifacts:
+                path: ~/.sfdx/sfdx.log
+                destination: sfdx-logs
+        
+
+    feature-RunTestsDistributed_2:
+        machine: true 
+        steps: 
+            - checkout
+            - attach_workspace:
+                at: ~/
+            - run: 
+                name: DX Install
+                command: ~/tools/sfdx/install
+            - run: 
+                name: Create 2nd feature Org and push source
+                command: |
+                    sfdx force:org:create --definitionfile ./config/project-scratch-def.json \
+                            --setalias feature2 \
+                            --durationdays 1
+                    sfdx force:source:push -u feature2
+            - run: 
+                name: generate password so we can login if something fails
+                command: |
+                    sfdx force:user:password:generate -u feature2
+            - run:
+                name: Query Tests And Run 2nd half of Tests
+                command: |
+                    sfdx force:data:soql:query -q "select Name from apexclass where name like '%Test'" -u feature2 --json >> ~/tools/ApexTests.json
+                    testsToRun=$(cat ~/tools/ApexTests.json | jq -r '.result.records[length/2:length] | .[] .Name+","' --join-output)
+                    sfdx force:apex:test:run -u feature2 -w 10 -c -r human -d ~/test-results -n $testsToRun
+            - run: 
+                name: Delete Scratch
+                when: always 
+                command: |
+                    sfdx force:org:delete -u feature2 --noprompt
+            - store_test_results:
+                path: ~/test-results
+            - store_artifacts:
+                path: ~/test-results
+                destination: test-results
+            - store_artifacts:
+                path: ~/.sfdx/sfdx.log
+                destination: sfdx-logs
+
+    master-convert-and-modify-source:
+        machine: true
+        steps: 
+            - attach_workspace:
+                at: ~/
+            - checkout  
+            - run: 
+                name: Install DX 
+                command: |
+                   ~/tools/sfdx/install   
+            - run: 
+                name: convert source to mdapi format and store
+                command: |
+                  mkdir ~/tools/src
+                  sfdx force:source:convert -d ~/tools/src
+            - run:
+                name: remove user permissions from admin profile (if present)
+                command: |
+                  test -f ~/tools/src/profiles/Admin.profile && sed -i '/<userPermissions>/,/<\/userPermissions>/d' || echo no profile found
+            - persist_to_workspace:
+                root: ~/
+                paths:
+                  - tools/*
+            - store_artifacts:
+                path: ~/.sfdx/sfdx.log
+                destination: sfdx-logs
+
+    master-Deploy-checkonly:
+        machine: true 
+        steps: 
+            - attach_workspace:
+                at: ~/
+            - run: 
+                name: DX Install
+                command: ~/tools/sfdx/install
+            - run: 
+                name: do a check only deployment with tests running
+                command: |
+                    sfdx force:mdapi:deploy -d ~/tools/src \
+                                            --testlevel RunLocalTests \
+                                            -u production \
+                                            --checkonly  \
+                                            -w -1
+
+    master-Deploy:
+        machine: true 
+        steps: 
+            - attach_workspace:
+                at: ~/
+            - run: 
+                name: DX Install
+                command: ~/tools/sfdx/install
+            - run: 
+                name: deploy src
+                command: |
+                    sfdx force:mdapi:deploy -d ~/tools/src \
+                                            -u production \
+                                            --testlevel NoTestRun \
+                                            -w -1
+
+workflows:
+  version: 2
+  salesforcedx:
+    jobs:
+      - setup-dx-environment
+      - feature-RunTestsDistributed_1:
+          requires: 
+                - setup-dx-environment
+          filters:
+              branches:
+                  only:
+                  - /feature\/.*/
+      - feature-RunTestsDistributed_2:
+            requires: 
+                - setup-dx-environment
+            filters:
+                branches:
+                    only:
+                    - /feature\/.*/
+      - master-convert-and-modify-source:
+            requires: 
+                - setup-dx-environment
+            filters:
+                branches:
+                    only:
+                    - master
+      - master-Deploy-checkonly:
+            requires: 
+                - master-convert-and-modify-source
+            filters:
+                branches:
+                    only:
+                    - master
+      - master-Deploy:
+            requires: 
+                - master-Deploy-checkonly
+            filters:
+                branches:
+                    only:
+                    - master
