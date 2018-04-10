@@ -100,6 +100,8 @@ jobs:
                 name: Query Tests And Run 2nd half of Tests
                 command: |
                     sfdx force:data:soql:query -q "select Name from apexclass where name like '%Test'" -u feature2 --json >> ~/tools/ApexTests.json
+                    cat ~/tools/ApexTests.json 
+                    cat ~/tools/ApexTests.json | jq -r '.result.records[length/2:length] | .[] .Name+","' --join-output
                     testsToRun=$(cat ~/tools/ApexTests.json | jq -r '.result.records[length/2:length] | .[] .Name+","' --join-output)
                     sfdx force:apex:test:run -u feature2 -w 10 -c -r human -d ~/test-results -n $testsToRun
             - run: 
