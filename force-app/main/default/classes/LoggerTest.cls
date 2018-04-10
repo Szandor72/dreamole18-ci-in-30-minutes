@@ -9,7 +9,7 @@ private class LoggerTest {
         Test.startTest();
         Logger.log(testString);
         Test.stopTest();
-        System.AssertEquals(testString, Logger.logEntries[0].description, 'Description must match testString');
+        System.AssertEquals(testString, Logger.logEntries[0].description, 'Description must match testString.');
     }
 
     @istest
