@@ -113,7 +113,7 @@ private class LoggerTest {
                             'One Entry saved');
         System.assertNotEquals(true, String.isBlank(entries[0].logEntryJSON__c),'JSON is filled');
         System.assertNotEquals(null, entries[0].cpuTimeUsage__c,'CPU Time is filled');       
-        System.assert(entries[0].cpuTimeUsage__c > 0,'CPU Time is greater 0');             
+        System.assert(entries[0].cpuTimeUsage__c > -1,'CPU Time is greater -1');             
     }
 
     @isTest
