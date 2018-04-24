@@ -13,7 +13,7 @@ jobs:
                 cat ~/tools/manifest.json
                 cat ~/tools/manifest.json | jq -r '.installers."linux-x64".url' 
                 DXURL=$(cat ~/tools/manifest.json | jq -r '.installers."linux-x64".url')
-                DXFOLDER=$(cat ~/tools/manifest.json | jq -r '.installers."linux-x64".url | match ("[^/]+$"; "g") .string | match (".+[^\\.tar.\\.xz]") .string)
+                DXFOLDER=$(cat ~/tools/manifest.json | jq -r '.installers."linux-x64".url | match ("[^/]+$"; "g") .string | match (".+[^\\.tar.\\.xz]") .string'
                 echo extract and install 
                 wget -qO- $DXURL | tar xJf - --directory ~/tools/
                 mv ~/tools/$DXFOLDER ~/tools/sfdx
