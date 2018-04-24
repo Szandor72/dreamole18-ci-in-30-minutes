@@ -7,8 +7,13 @@ jobs:
             name: Download DX and store 
             command: |
                 mkdir ~/tools
-                wget -qO- https://developer.salesforce.com/media/salesforce-cli/sfdx-cli/channels/stable/sfdx-cli-v6.12.0-8b887b22cc-linux-x64.tar.xz | tar xJf - --directory ~/tools/
-                mv ~/tools/sfdx-cli-v6.12.0-8b887b22cc-linux-x64 ~/tools/sfdx
+                echo download manifest file and grab latest version 
+                wget -oO- https://developer.salesforce.com/media/salesforce-cli/manifest.json > ~/tools/manifest.json
+                DXURL=$(cat ~/tools/manifest.json | jq -r '.installers."linux-x64".url')
+                DXFOLDER=$(cat ~/tools/manifest.json | jq -r '.installers."linux-x64".url | match ("[^/]+$"; "g") .string | match (".+[^\\.tar.\\.xz]") .string)
+                echo extract and install 
+                wget -qO- $DXURL | tar xJf - --directory ~/tools/
+                mv ~/tools/$DXFOLDER ~/tools/sfdx
                 ~/tools/sfdx/install
         - run:
             name: create tmp dir and server key; check server key
