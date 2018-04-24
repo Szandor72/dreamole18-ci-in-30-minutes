@@ -131,6 +131,14 @@ jobs:
             - store_artifacts:
                 path: ~/.sfdx/sfdx.log
                 destination: sfdx-logs
+    finally: 
+        machine: true
+        steps:
+            - run:
+                name: Hooray
+                command: echo Hooray
+                when: always
+
 
     master-convert-and-modify-source:
         machine: true
@@ -159,7 +167,7 @@ jobs:
                 path: ~/.sfdx/sfdx.log
                 destination: sfdx-logs
 
-    master-Deploy-checkonly:
+    master-Checkonly:
         machine: true 
         steps: 
             - attach_workspace:
@@ -211,6 +219,10 @@ workflows:
                 branches:
                     only:
                     - /feature\/.*/
+      - finally:
+            requires:
+                - feature-RunTestsDistributed_1
+                - feature-RunTestsDistributed_2
       - master-convert-and-modify-source:
             requires: 
                 - setup-dx-environment
@@ -218,7 +230,7 @@ workflows:
                 branches:
                     only:
                     - master
-      - master-Deploy-checkonly:
+      - master-Checkonly:
             requires: 
                 - master-convert-and-modify-source
             filters:
