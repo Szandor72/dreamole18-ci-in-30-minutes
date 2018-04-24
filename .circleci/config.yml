@@ -239,7 +239,7 @@ workflows:
                     - master
       - master-Deploy:
             requires: 
-                - master-master-Checkonly
+                - master-Checkonly
             filters:
                 branches:
                     only:
