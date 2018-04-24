@@ -111,7 +111,7 @@ jobs:
                                     -q "select Name from apexclass where name like '%Test' order by name" \
                                     -u feature2 --json > ~/tools/ApexTests.json
                     cat  ~/tools/ApexTests.json | jq -r '.result.records | .[length/2:length] |.[] .Name+","' --join-output
-                    testsToRun=$(cat ~/tools/ApexTests.json | jq -r '.result.records | .[length/2:length] |.[] .Name+","' --join-output)
+                    testsToRun=$(cat ~/tools/ApexTests.json | jq -r '.result.records | .[(length/2 + length % 2):length] |.[] .Name+","' --join-output)
                     sfdx force:apex:test:run \
                                         -u feature2 \
                                         -w 10 \
