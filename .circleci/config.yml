@@ -8,7 +8,7 @@ jobs:
             command: |
                 mkdir ~/tools
                 echo download manifest file and grab latest version 
-                wget -oO- https://developer.salesforce.com/media/salesforce-cli/manifest.json > ~/tools/manifest.json
+                wget -qO- https://developer.salesforce.com/media/salesforce-cli/manifest.json > ~/tools/manifest.json
                 echo parse info into env vars
                 cat ~/tools/manifest.json
                 cat ~/tools/manifest.json | jq -r '.installers."linux-x64".url' 
