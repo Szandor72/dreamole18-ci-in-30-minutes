@@ -7,11 +7,10 @@ jobs:
             name: Download DX and store 
             command: |
                 mkdir ~/tools
-                echo download manifest file and grab latest version 
+                echo download manifest file and grab latest version, display URL
                 wget -qO- https://developer.salesforce.com/media/salesforce-cli/manifest.json > ~/tools/manifest.json
-                echo parse info into env vars
-                cat ~/tools/manifest.json
                 cat ~/tools/manifest.json | jq -r '.installers."linux-x64".url' 
+                echo parse info into env vars
                 DXURL=$(cat ~/tools/manifest.json | jq -r '.installers."linux-x64".url')
                 DXFOLDER=$(cat ~/tools/manifest.json | jq -r '.installers."linux-x64".url | match ("[^/]+$"; "g") .string | match (".+[^\\.tar.\\.xz]") .string')
                 echo extract and install 
