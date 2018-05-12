@@ -18,17 +18,17 @@ jobs:
                 mv ~/tools/$DXFOLDER ~/tools/sfdx
                 ~/tools/sfdx/install
         - run:
-            name: create tmp dir and server key; check server key
+            name: create tmp dir and server key; check server key. server key is stored in HEX format. See readme.
             command: |
                 mkdir ~/tools/sfdx-keys 
                 echo $SSL_SERVER_KEY_HEX | xxd -r -ps >> ~/tools/sfdx-keys/server.key;
                 openssl rsa -in ~/tools/sfdx-keys/server.key -check -noout
         - run:
-            name: check auth for dev hub
+            name: check auth for dev hub. If this is missing, a build should fail immediately.
             command: |
                 sfdx force:auth:jwt:grant --clientid $DX_CONSUMER_KEY --jwtkeyfile ~/tools/sfdx-keys/server.key --username $DX_USER --setdefaultdevhubusername --setalias hub
         - run: 
-            name: check auth for production
+            name: check auth for production. This uses another way of authentication, an DX authURL. See commands.txt for more info
             command: |
                 echo $DX_AUTHURL_PRODUCTION >> ~/tools/production.auth
                 sfdx force:auth:sfdxurl:store -f ~/tools/production.auth -a production
@@ -59,11 +59,11 @@ jobs:
                             --durationdays 1
                     sfdx force:source:push -u feature1
             - run: 
-                name: generate password so we can login if something fails
+                name: generate password so we can login if something fails. Results will be outputted in circleci.
                 command: |
                     sfdx force:user:password:generate -u feature1
             - run:
-                name: Query Tests And Run 1st half of Tests
+                name: Query Tests And Run 1st half of Tests. Use bash utitlity JQ to parse result JSONs. 
                 command: |
                     sfdx force:data:soql:query \
                                     -q "select Name from apexclass where name like '%Test' order by name" \
@@ -142,7 +142,7 @@ jobs:
         machine: true
         steps:
             - run:
-                name: Hooray
+                name: Hooray. This will always run no matter the results from the previous steps. 
                 command: echo Hooray
                 when: always
 

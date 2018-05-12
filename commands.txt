@@ -1,0 +1,75 @@
+# pre-requesite: valid dev hub authentication; dont confuse all the hubs. :) 
+sfdx force:auth:web:login -r https://login.salesforce.com --setdefaultdevhubusername 
+
+#initial project setup with git and stuff 
+sfdx force:project:create -n 'dreamole18-ci-in-30-minutes' 
+cd .\dreamole18-ci-in-30-minutes\
+git init
+git remote add origin https://github.com/Szandor72/dreamole18-ci-in-30-minutes
+git add -A
+git commit -m 'Initial Commit'
+
+#usually, I'd create new branch here - skipping. What's that cryptic W-? It's a WorkItem Number in Agile Accelerator
+#git checkout -b feature/W-000123
+
+
+#converting my packaged metadata into dx format should it not be dx format yet.
+#if you want to perserve git history, have a look at: https://ntotten.com/2018/05/11/convert-metadata-to-source-format-while-maintain-git-history/
+# sfdx force:mdapi:convert -r .\packaged\ 
+
+#edit .\config\project-scratch-def.json for language and country => without further specifications,
+# the default language will be the dev hubs system language. That's German in my case.  
+sfdx force:org:create -f .\config\project-scratch-def.json --setalias ole --setdefaultusername
+
+#checking stuff - I should see my dev hub and my new scratch org 
+sfdx force:org:list
+
+#push source and open org
+sfdx force:source:push
+sfdx force:org:open
+
+#Looking around, we realize that we have have no access to awesome lightning workbench
+#create and assign persmission set in scratch org UI, name it LightningWorkbench
+
+sfdx force:source:status
+sfdx force:source:pull
+sfdx force:user:permset:assign -n LightningWorkbench --onbehalfof zuerich
+
+#realize: crap, no sample data in my scratch org. Lets create another one.
+#edit scrap definiton "hasSampleData" : true,
+
+#best practice is to delete scratch orgs again, I didn't bother to do that here. 
+
+#create new scratch org 
+sfdx force:org:create -f .\config\project-scratch-def.json --setalias zuerich --setdefaultusername
+sfdx force:source:push 
+sfdx force:user:permset:assign -n LightningWorkbench --onbehalfof zuerich
+sfdx force:org:open
+
+#Winter Cleaning - I have replaced c:modal with lightning:overlayLibrary
+# I have a lightning component 'modal' to delete. Deleting in UI seems not to get immediately noticed by DX. 
+# solution: edit  some other lightning component. modifying some other's cmp lastmodifieddate does the trick
+
+# check if deletion is picked up by dx
+sfdx force:source:status
+
+#get changes
+sfdx force:source:pull
+
+#Looking through the metadata I see undefined_UtilityBar.flexipage-mexta.xml 
+# By manipulating local metadata only, can we get rid of this? 
+# Try out for yourself!
+
+#How about creating a new custom object in the UI? 
+#Try it out yourself
+#Have a look at the folder/file structure: so much easier to directly edit than classic metadata 
+
+#need to swap authentication with yourself on another computer? use an auth.json 
+force:auth:sfdxurl:store -f ./auth.json
+#auth.json contains only one single property: sfdxAuthUrl
+#copy that property from here:
+#sfdx force:org:display --verbose --json
+
+#Setup CI Magic!
+cf readme of this repo
+cf .circleci/config.yml
