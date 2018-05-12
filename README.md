@@ -31,6 +31,8 @@ CircleCI 2.0 is pretty straigtht forward to read without any prior experience. T
 
 Also, here are the slides from Barcelona: https://docs.google.com/presentation/d/16Bips8nfEFayiEhfbzSkEPNAsUb_cWKdcSB-K1qACzU/edit?usp=sharing
 
+A connected app is not the only way to get things up and running. If many sandboxes are involved, have a look at _-commands.txt_ and _.circleci/config.yml_ to learn about another way to authenticate against an existing org.
+
 There is a __feature__ and a __master__ flow in _./circleci/config.ym
 ## Feature Flow
 
@@ -40,7 +42,7 @@ The feature flow will take your code from any feature branch (feature/myFeature0
 
 Will do a test-only deploy first, a real deployment after. Master flow need not stop here. If you are building a package, this is where you could also upload the package as beta and install this beta into yet another scratch org to run tests. 
 
-It also illustrates how to manipulate metadata during build time. In this case, all _userPermissions_ will be stripped from the _Admin.profile_. In effect this transports all object, fls settings but also for example layout assignments which cannot be be preserved by permission sets. 
+It also illustrates how to manipulate metadata during build time. In this case, all _userPermissions_ will be stripped from the _Admin.profile_. In effect this transports all object, fls settings but also for example layout assignments which cannot be be preserved by permission sets.
 
 ## Resources
 - https://trailhead.salesforce.com/en/trails/sfdx_get_started
