@@ -1,4 +1,4 @@
-# From 0 to CI in 30 minutes
+# From Zero to CI in 30 minutes
 
 This repo is a clone of another DX project: https://github.com/Szandor72/logger used only to illustrate build capabilities with CircleCI 2.0. 
 
